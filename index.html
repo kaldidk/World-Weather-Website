@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="countryWeatherApp">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Weather Websit</title>
+    <!-- Adding  Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="script.js"></script>
+  </head>
+  <body ng-controller="MainController" class="bg-gray-50 min-h-screen p-6 font-sans">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-center mb-8 text-blue-600">World Weather Website</h1>
+      <div class="relative">
+        <input type="text" ng-model="searchQuery" placeholder="Search countries..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+          </svg>
+        </div>
+      </div>
+      <p class="mt-2 text-sm text-gray-600" ng-if="filteredCountries.length !== countries.length"> Showing {{ filteredCountries.length }} of {{ countries.length }} countries </p>
+    </div>
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-blue-500 text-white">
+            <th class="px-6 py-3 text-left">Country</th>
+            <th class="px-6 py-3 text-left">Capital</th>
+            <th class="px-6 py-3 text-left">Region</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat-start="country in filteredCountries" ng-click="toggleDetails(country)" class="border-b hover:bg-blue-50 cursor-pointer transition-colors duration-150">
+            <td class="px-6 py-4">{{ country.name.common }}</td>
+            <td class="px-6 py-4">{{ country.capital[0] }}</td>
+            <td class="px-6 py-4">{{ country.region }}</td>
+          </tr>
+
+          <tr ng-if="selectedCountry === country" class="bg-blue-50">
+            <td class="px-6 py-3 font-semibold text-blue-700"> Weather in {{ country.capital[0] }}
+            </td>
+            <td colspan="2" class="px-6 py-3 text-right">
+              <div class="inline-flex rounded-md shadow-sm" role="group">
+                <button type="button" ng-click="setUnit('metric')" class="px-3 py-1 text-sm font-medium rounded-l-lg border" ng-class="{'bg-blue-600 text-white border-blue-600': units === 'metric', 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100': units !== 'metric'}"> Metric (°C) </button>
+                <button type="button" ng-click="setUnit('imperial')" class="px-3 py-1 text-sm font-medium rounded-r-lg border" ng-class="{'bg-blue-600 text-white border-blue-600': units === 'imperial', 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100': units !== 'imperial'}"> Imperial (°F) </button>
+              </div>
+            </td>
+          </tr>
+          <tr ng-if="selectedCountry === country" class="bg-blue-50">
+            <td class="px-6 py-2 pl-10 text-gray-600">Temperature</td>
+            <td colspan="2" class="px-6 py-2">
+              <div class="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v7.586l2.293-2.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 10.586V3a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                <span>{{ weatherData.temperature || 'Loading...' }}</span>
+              </div>
+            </td>
+          </tr>
+          <tr ng-if="selectedCountry === country" class="bg-blue-50">
+            <td class="px-6 py-2 pl-10 text-gray-600">Precipitation</td>
+            <td colspan="2" class="px-6 py-2">
+              <div class="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span>{{ weatherData.precipitation || 'Loading...' }}</span>
+              </div>
+            </td>
+          </tr>
+          <tr ng-if="selectedCountry === country" class="bg-blue-50 border-b">
+            <td class="px-6 py-2 pl-10 text-gray-600">Wind speed</td>
+            <td colspan="2" class="px-6 py-2">
+              <div class="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                <span>{{ weatherData.windSpeed || 'Loading...' }}</span>
+              </div>
+            </td>
+          </tr>
+          <tr ng-repeat-end ng-if="false"></tr>
+        </tbody>
+      </table>
+    </div>
+    <div ng-if="filteredCountries.length === 0 && !loading" class="text-center py-8">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <p class="text-gray-600">No countries found matching "{{ searchQuery }}"</p>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div ng-if="loading" class="text-center py-8">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <p class="mt-2 text-gray-600">Loading countries...</p>
+    </div>
+    </div>
+  </body>
+</html>
